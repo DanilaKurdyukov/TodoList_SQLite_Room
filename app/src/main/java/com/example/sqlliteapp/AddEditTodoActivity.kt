@@ -8,19 +8,19 @@ import android.os.Bundle
 import android.provider.BaseColumns
 import android.view.View
 import android.widget.Toast
-import com.example.sqlliteapp.data.AppData
-import com.example.sqlliteapp.data.DBHelper
+import com.example.sqlliteapp.data.TodoDatabase
 import com.example.sqlliteapp.models.Todo
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.textfield.TextInputEditText
 
 class AddEditTodoActivity : AppCompatActivity() {
 
-    val dbHelper = DBHelper(this@AddEditTodoActivity)
+    private val todoDao by lazy { TodoDatabase.getDB(this@AddEditTodoActivity).todoDao() }
 
-    var txtTitle: TextInputEditText? = null
-    var txtDescription: TextInputEditText? = null
-    var btnSave: MaterialButton? = null
+    private lateinit var txtTitle: TextInputEditText
+    private lateinit var txtDescription: TextInputEditText
+    private lateinit var btnSave: MaterialButton
+    private lateinit var current: Todo
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,58 +37,41 @@ class AddEditTodoActivity : AppCompatActivity() {
         txtDescription = findViewById(R.id.edit_text_todoDescription)
         btnSave = findViewById(R.id.button_save)
 
-        var current = Todo(0, "", "")
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            current = intent.extras?.getSerializable("Todo", Todo::class.java)!!
-        } else {
-            current = intent.extras?.getSerializable("Todo") as Todo
+        if (intent.extras!=null){
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                current = intent.extras!!.getSerializable("Todo", Todo::class.java)!!
+            } else {
+                current = intent.extras?.getSerializable("Todo") as Todo
+            }
+            txtTitle.setText(current.title)
+            txtDescription.setText(current.description)
         }
 
-        txtTitle?.setText(current.title)
-        txtDescription?.setText(current.description)
-
-        btnSave?.setOnClickListener(View.OnClickListener {
-            if (current==null){
+        btnSave.setOnClickListener(View.OnClickListener {
+            if(!this@AddEditTodoActivity::current.isInitialized){
                 insertData(txtTitle?.text.toString(), txtDescription?.text.toString())
-            } else {
-                updateData(current.id,txtTitle?.text.toString(), txtDescription?.text.toString())
+            }
+            else {
+                updateData(txtTitle.text.toString(), txtDescription.text.toString())
             }
         })
     }
 
     private fun insertData(title: String, description: String){
-        val db = dbHelper.writableDatabase
 
-        val values = ContentValues().apply {
-           put(AppData.TodoContract.Todo.COLUMN_NAME_TITlE,title)
-           put(AppData.TodoContract.Todo.COLUMN_NAME_DESCRIPTION,description)
-        }
-        val newRowId = db.insert(AppData.TodoContract.Todo.TABLE_NAME,null,values)
-        val errorCode : Long = -1
-        if (newRowId != errorCode){
-            Toast.makeText(this@AddEditTodoActivity,"Задача добавлена!",Toast.LENGTH_SHORT).show()
-            startActivity(Intent(this@AddEditTodoActivity,MainActivity::class.java))
-        }
-        db.close()
+        val todo = Todo(0, title, description)
+        todoDao.addAll(todo)
+        startActivity(Intent(this@AddEditTodoActivity,MainActivity::class.java))
    }
 
-    private fun updateData(id: Int, title: String, description: String){
-        val db = dbHelper.writableDatabase
-
-        val values = ContentValues().apply {
-            put(AppData.TodoContract.Todo.COLUMN_NAME_TITlE, title)
-            put(AppData.TodoContract.Todo.COLUMN_NAME_DESCRIPTION, description)
-        }
-
-        val selection = "${BaseColumns._ID} = ?"
-        val selectionArgs = arrayOf(id.toString())
-        db.update(AppData.TodoContract.Todo.TABLE_NAME, values, selection, selectionArgs)
+    private fun updateData(title: String, description: String){
+        val todo = Todo(current.id,title,description)
+        todoDao.updateTodo(todo)
         startActivity(Intent(this@AddEditTodoActivity,MainActivity::class.java))
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        dbHelper.close()
+        //dbHelper.close()
     }
 }

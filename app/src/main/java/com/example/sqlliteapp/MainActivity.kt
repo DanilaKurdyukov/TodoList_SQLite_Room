@@ -8,16 +8,15 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.ItemTouchHelper
 import androidx.recyclerview.widget.RecyclerView
 import com.example.sqlliteapp.adapters.TodoAdapter
-import com.example.sqlliteapp.data.AppData
-import com.example.sqlliteapp.data.DBHelper
 import com.example.sqlliteapp.data.ItemTouchHelperCallback
+import com.example.sqlliteapp.data.TodoDatabase
 import com.example.sqlliteapp.models.Todo
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 
 class MainActivity : AppCompatActivity() {
 
-    private val dbHelper = DBHelper(this@MainActivity)
+    private val todoDao by lazy { TodoDatabase.getDB(this@MainActivity).todoDao() }
     private var todoRecycler : RecyclerView? = null
     private var todoAdapter : TodoAdapter? = null
     private var todoes = arrayListOf<Todo>()
@@ -41,44 +40,14 @@ class MainActivity : AppCompatActivity() {
         todoAdapter?.notifyDataSetChanged()
     }
 
-    private fun readData(){
-        val db = dbHelper.readableDatabase
-
-        val projection = arrayOf(BaseColumns._ID, AppData.TodoContract.Todo.COLUMN_NAME_TITlE, AppData.TodoContract.Todo.COLUMN_NAME_DESCRIPTION)
-
-        //val selection = "${AppData.FeedReaderContract.FeedEntry.COLUMN_NAME_TITLE} = ?"
-        //val selectionArgs = arrayOf("My title")
-
-        //val sortOrder = "${AppData.FeedReaderContract.FeedEntry.COLUMN_NAME_SUBTITLE} DESC"
-
-        val cursor = db.query(
-            AppData.TodoContract.Todo.TABLE_NAME,
-            projection,
-            null,
-            null,
-            null,
-            null,
-            null
-        )
-        with(cursor){
-            while(moveToNext()){
-                val todo = Todo(
-                    getInt(getColumnIndexOrThrow(BaseColumns._ID)),
-                    getString(getColumnIndexOrThrow(AppData.TodoContract.Todo.COLUMN_NAME_TITlE)),
-                    getString(getColumnIndexOrThrow(AppData.TodoContract.Todo.COLUMN_NAME_DESCRIPTION))
-                )
-                todoes.add(todo)
-                todoAdapter?.notifyItemInserted(position)
-            }
-        }
-        cursor.close()
+    private fun readData() {
+        todoes = todoDao.getTodos() as ArrayList<Todo>
+        todoAdapter = TodoAdapter(this@MainActivity, todoes)
+        todoRecycler?.adapter = todoAdapter
     }
 
     private fun init(){
         todoRecycler = findViewById(R.id.recycler_view_todoList)
-        todoAdapter = TodoAdapter(this@MainActivity,todoes)
-        todoRecycler?.adapter = todoAdapter
-
         val toolbar = findViewById<androidx.appcompat.widget.Toolbar>(R.id.mainAppBar)
         setSupportActionBar(toolbar)
 
@@ -112,17 +81,12 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun deleteTodo(current: Todo){
-        val db = dbHelper.readableDatabase
-
-        val selection = "${BaseColumns._ID} = ?"
-        val selectionArgs = arrayOf(current.id.toString())
-
-        db.delete(AppData.TodoContract.Todo.TABLE_NAME, selection, selectionArgs)
+        todoDao.deleteTodo(current)
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        dbHelper.close()
+        //dbHelper.close()
     }
 
 }
