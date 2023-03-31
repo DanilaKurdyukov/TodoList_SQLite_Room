@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".AddEditTodoActivity"
+    android:background="@color/white">
+
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/todoTitle_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintBottom_toBottomOf="parent"
+        style="@style/TextInputLayoutStyle"
+        android:hint="Название задачи"
+        app:hintTextColor="@color/soft_orange"
+        android:textColorHint="@color/soft_orange">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_text_todoTitle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/EditText"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/todoDescription_layout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/todoTitle_layout"
+        style="@style/TextInputLayoutStyle"
+        android:hint="Описание задачи"
+        app:hintTextColor="@color/soft_orange"
+        android:textColorHint="@color/soft_orange">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edit_text_todoDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            style="@style/EditText"/>
+
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <com.google.android.material.button.MaterialButton
+        android:id="@+id/button_save"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:layout_constraintTop_toBottomOf="@id/todoDescription_layout"
+        android:layout_margin="@dimen/main_margin"
+        android:backgroundTint="#4CAF50"
+        android:textAllCaps="false"
+        android:text="Сохранить"
+        android:textColor="@color/white"
+        android:textSize="16dp"/>
+
+
+
+</androidx.constraintlayout.widget.ConstraintLayout>
